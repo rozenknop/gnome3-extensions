@@ -25,43 +25,35 @@
  * Simple extension to lock the screen from an icon on the panel.
  */
 
-import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-/*import * as ScreenSaver from 'resource:///org/gnome/shell/misc/screenSaver.js';*/
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 export default class LockScreenButtonExtension extends Extension {
-	lockScreenButton = null;
+	_indicator = null;
 
 	enable() {
-		this.lockScreenButton = new St.Bin({
-			style_class: 'panel-button',
-			reactive: true,
-			can_focus: true,
-			y_align: Clutter.ActorAlign.CENTER,
-			track_hover: true
-		});
-		let icon = new St.Icon({
+		this._indicator = new PanelMenu.Button(0.0, 'Lock Screen', true);
+		const icon = new St.Icon({
 			icon_name: 'changes-prevent-symbolic',
 			style_class: 'system-status-icon'
 		});
-		this.lockScreenButton.set_child(icon);
-		this.lockScreenButton.connect('button-press-event', _LockScreenActivate);
+		this._indicator.add_child(icon);
+		this._indicator.connect('button-press-event', (_actor, event) => {
+			if (event.get_button() !== 1)
+				return false;
+			Main.overview?.hide();
+			Main.screenShield?.lock(true);
+			return true;
+		});
 
-		Main.panel._rightBox.insert_child_at_index(this.lockScreenButton, 0);
+		Main.panel.addToStatusArea(this.uuid, this._indicator, 0, 'right');
 	}
 
 	disable() {
-		Main.panel._rightBox.remove_child(this.lockScreenButton);
-		this.lockScreenButton = null;
+		this._indicator?.destroy();
+		this._indicator = null;
 	}
-}
-
-function _LockScreenActivate() {
-	Main.overview.hide();
-	/*	screenSaverProxy = new ScreenSaver.ScreenSaverProxy();
-		screenSaverProxy.LockRemote();*/
-	Main.screenShield.lock(true)
 }

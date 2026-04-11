@@ -32,61 +32,60 @@ import St from 'gi://St';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as GnomeSession from 'resource:///org/gnome/shell/misc/gnomeSession.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 const LOGOUT_MODE_NORMAL = 0;
 
-var baseGIcon;
-var hoverGIcon;
-var buttonIcon;
-
 export default class LogoutButtonExtension extends Extension {
-  logoutButton = null;
+  _indicator = null;
+  _baseGIcon = null;
+  _hoverGIcon = null;
+  _buttonIcon = null;
+  _sessionManager = null;
 
   enable() {
-    this.logoutButton = new St.Bin({
-      style_class: 'panel-button',
-      reactive: true,
-      can_focus: true,
-      x_expand: true,
-      y_expand: false,
-      track_hover: true
-    });
-    var dir = this.path;
-    // credit: http://stackoverflow.com/questions/20394840/how-to-set-a-png-file-in-a-gnome-shell-extension-for-st-icon
-    baseGIcon = Gio.icon_new_for_string(dir + "/icons/logout-base.svg");
-    hoverGIcon = Gio.icon_new_for_string(dir + "/icons/logout-hover.svg");
-    buttonIcon = new St.Icon({
-      'gicon': Gio.icon_new_for_string(dir + "/icons/logout-base.svg"),
-      'style_class': 'system-status-icon'
-    });
+    const dir = Gio.File.new_for_path(this.path);
+    this._baseGIcon = new Gio.FileIcon({ file: dir.get_child('icons/logout-base.svg') });
+    this._hoverGIcon = new Gio.FileIcon({ file: dir.get_child('icons/logout-hover.svg') });
 
-    this.logoutButton.set_child(buttonIcon);
-    this.logoutButton.connect('button-press-event', _DoLogout);
-    this.logoutButton.connect('enter-event', function () {
-      _SetButtonIcon('hover');
+    this._indicator = new PanelMenu.Button(0.0, 'Logout Button', true);
+    this._buttonIcon = new St.Icon({
+      gicon: this._baseGIcon,
+      style_class: 'system-status-icon'
     });
-    this.logoutButton.connect('leave-event', function () {
-      _SetButtonIcon('base');
-    });
+    this._indicator.add_child(this._buttonIcon);
 
-    Main.panel._rightBox.insert_child_at_index(this.logoutButton, 0);
+    this._indicator.connect('button-press-event', (_actor, event) => {
+      if (event.get_button() !== 1)
+        return false;
+      this._doLogout();
+      return true;
+    });
+    this._indicator.connect('enter-event', () => this._setButtonIcon('hover'));
+    this._indicator.connect('leave-event', () => this._setButtonIcon('base'));
+
+    this._sessionManager = new GnomeSession.SessionManager();
+
+    Main.panel.addToStatusArea(this.uuid, this._indicator, 0, 'right');
   }
 
   disable() {
-    Main.panel._rightBox.remove_child(this.logoutButton);
-    this.logoutButton = null;
+    this._indicator?.destroy();
+    this._indicator = null;
+    this._buttonIcon = null;
+    this._baseGIcon = null;
+    this._hoverGIcon = null;
+    this._sessionManager = null;
   }
-}
 
-function _SetButtonIcon(mode) {
-  if (mode === 'hover') {
-    buttonIcon.set_gicon(hoverGIcon);
-  } else {
-    buttonIcon.set_gicon(baseGIcon);
+  _setButtonIcon(mode) {
+    if (mode === 'hover')
+      this._buttonIcon?.set_gicon(this._hoverGIcon);
+    else
+      this._buttonIcon?.set_gicon(this._baseGIcon);
   }
-}
 
-function _DoLogout() {
-  var sessionManager = new GnomeSession.SessionManager();
-  sessionManager.LogoutRemote(LOGOUT_MODE_NORMAL);
+  _doLogout() {
+    this._sessionManager?.LogoutRemote(LOGOUT_MODE_NORMAL);
+  }
 }
