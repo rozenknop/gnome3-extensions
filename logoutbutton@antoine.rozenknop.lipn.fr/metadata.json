@@ -1,0 +1,15 @@
+{
+  "description": "Ajout d'un bouton de déconnexion au bandeau supérieur (fork de logoutbutton@lfarkas.org)",
+  "name": "Bouton de déconnexion sur le bandeau supérieur",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ],
+  "url": "https://github.com/rozenknop/gnome3-extensions.git",
+  "uuid": "logoutbutton@antoine.rozenknop.lipn.fr",
+  "version": 1
+}

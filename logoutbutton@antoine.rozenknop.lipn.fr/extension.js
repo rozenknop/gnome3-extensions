@@ -1,6 +1,7 @@
 /* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
 
 /*
+ * Copyright © 2026 Antoine Rozenknop
  * Copyright © 2023 Levente Farkas
  * Copyright © 2015 Mike Chaberski
  * Copyright © 2014 Sriram Ramkrishna
@@ -20,6 +21,7 @@
  *
  * Author: Mike Chaberski <mike10004@users.noreply.github.com>
  * Author: Levente Farkas <lfarkas@lfarkas.org>
+ * Author: Antoine Rozenknop <antoine.rozenknop@lipn.fr>
  */
 
 /*
@@ -48,7 +50,7 @@ export default class LogoutButtonExtension extends Extension {
     this._baseGIcon = new Gio.FileIcon({ file: dir.get_child('icons/logout-base.svg') });
     this._hoverGIcon = new Gio.FileIcon({ file: dir.get_child('icons/logout-hover.svg') });
 
-    this._indicator = new PanelMenu.Button(0.0, 'Logout Button', true);
+    this._indicator = new PanelMenu.Button(0.0, 'Déconnexion', true);
     this._buttonIcon = new St.Icon({
       gicon: this._baseGIcon,
       style_class: 'system-status-icon'
@@ -66,7 +68,7 @@ export default class LogoutButtonExtension extends Extension {
 
     this._sessionManager = new GnomeSession.SessionManager();
 
-    Main.panel.addToStatusArea(this.uuid, this._indicator, 0, 'right');
+    Main.panel.addToStatusArea(this.uuid, this._indicator, 99, 'right');
   }
 
   disable() {
